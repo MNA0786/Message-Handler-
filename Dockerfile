@@ -10,22 +10,22 @@ RUN apt-get update && apt-get install -y \
 # Composer install karo
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Apache configuration - headers module enable karo
-RUN a2enmod rewrite && a2enmod headers
+# Apache configuration
+RUN a2enmod rewrite
+
+# ServerName set karo to avoid warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Working directory set karo
 WORKDIR /var/www/html
 
-# Files copy karo
+# Files copy karo (except .htaccess if not needed)
 COPY . .
 
 # File permissions set karo
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
     && chmod 666 *.json *.txt 2>/dev/null || true
-
-# ServerName set karo to avoid warning
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Port expose karo
 EXPOSE 80
