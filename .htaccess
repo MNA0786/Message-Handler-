@@ -5,10 +5,10 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
 
-# Security headers
-Header always set X-Content-Type-Options nosniff
-Header always set X-Frame-Options DENY
-Header always set X-XSS-Protection "1; mode=block"
+# Security headers (comment out kiya because headers module enable nahi hai)
+# Header always set X-Content-Type-Options nosniff
+# Header always set X-Frame-Options DENY  
+# Header always set X-XSS-Protection "1; mode=block"
 
 # File access control
 <Files "*.json">
@@ -20,3 +20,6 @@ Header always set X-XSS-Protection "1; mode=block"
     Order Allow,Deny
     Deny from all
 </Files>
+
+# Server name error fix
+ServerName localhost
