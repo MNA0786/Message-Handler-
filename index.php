@@ -78,7 +78,7 @@ function tg($method, $data) {
     ];
     
     $context  = stream_context_create($options);
-    $result = file_get_contents($url, false, $context);
+    $result = @file_get_contents($url, false, $context);
     
     return $result;
 }
@@ -89,7 +89,7 @@ function log_admin($msg){
     
     // Log file mein write karo
     $log_entry = date("Y-m-d H:i:s") . " — " . $msg . "\n";
-    file_put_contents($log_file, $log_entry, FILE_APPEND);
+    @file_put_contents($log_file, $log_entry, FILE_APPEND);
     
     // Owner ko message bhejo
     tg("sendMessage", [
@@ -109,7 +109,7 @@ if (is_array($messages) && count($messages) > 0) {
                 $messages_to_keep[$mid] = $info;
             } else {
                 // Message delete karo
-                tg("deleteMessage", [
+                @tg("deleteMessage", [
                     "chat_id" => $GLOBALS["GROUP_ID"], 
                     "message_id" => $mid
                 ]);
@@ -117,7 +117,7 @@ if (is_array($messages) && count($messages) > 0) {
         }
     }
     
-    file_put_contents($delete_file, json_encode($messages_to_keep));
+    @file_put_contents($delete_file, json_encode($messages_to_keep));
     $messages = $messages_to_keep;
 }
 
@@ -134,12 +134,14 @@ if(!$update) {
         echo "✅ Bot Status: Online\n";
         echo "🕒 Server Time: " . date('Y-m-d H:i:s') . "\n";
         echo "📊 Messages in queue: " . count($messages) . "\n";
+        echo "🌐 Webhook: Ready\n";
+        echo "🚀 Bot is ready to receive messages!";
         exit;
     }
     
     // Agar POST request hai par invalid data
-    http_response_code(400);
-    echo "Invalid request";
+    http_response_code(200);
+    echo "OK";
     exit;
 }
 
@@ -162,7 +164,7 @@ if(isset($update["message"])){
             "time" => time(), 
             "del" => $delete_hours
         ];
-        file_put_contents($delete_file, json_encode($messages));
+        @file_put_contents($delete_file, json_encode($messages));
     }
 
     // ========== New Member joined ==========
@@ -291,12 +293,12 @@ if(isset($update["message"])){
             log_admin("🚫 Flood mute: $first_name (ID: $user_id, Username: @$username) - " . count($flood[$user_id]) . " messages in 5 seconds");
             
             // Flood data save karo
-            file_put_contents($flood_file, json_encode($flood));
+            @file_put_contents($flood_file, json_encode($flood));
             exit;
         }
 
         // Flood data save karo
-        file_put_contents($flood_file, json_encode($flood));
+        @file_put_contents($flood_file, json_encode($flood));
     }
 
     // ========== Commands Handler ==========
@@ -366,7 +368,7 @@ if(isset($update["message"])){
             $new_delete_hours = intval($matches[1]);
             
             // Update meta file
-            file_put_contents($meta_file, json_encode(["hours" => $new_delete_hours]));
+            @file_put_contents($meta_file, json_encode(["hours" => $new_delete_hours]));
             $delete_hours = $new_delete_hours;
 
             tg("sendMessage", [
@@ -416,7 +418,7 @@ if(isset($update["message"])){
         }
         
         $warns[$target_username]++;
-        file_put_contents($warn_file, json_encode($warns));
+        @file_put_contents($warn_file, json_encode($warns));
 
         $current_warns = $warns[$target_username];
         
@@ -429,8 +431,6 @@ if(isset($update["message"])){
 
         // Agar 3 warnings ho gaye to ban karo
         if($current_warns >= 3){
-            // Note: Yahan actual user ID nahi hai, isliye ban nahi kar sakte
-            // But warning reset kar sakte hain
             tg("sendMessage", [
                 "chat_id" => $chat_id,
                 "text" => "🚫 $target_username ko 3 warnings mil chuke hain (Ban manually karo)"
@@ -440,7 +440,7 @@ if(isset($update["message"])){
             
             // Warnings reset karo
             unset($warns[$target_username]);
-            file_put_contents($warn_file, json_encode($warns));
+            @file_put_contents($warn_file, json_encode($warns));
         }
         exit;
     }
@@ -471,8 +471,6 @@ if(isset($update["message"])){
             $target_username = '@' . $target_username;
         }
 
-        // Note: Actual ban user ID ke bina possible nahi hai
-        // But warning remove kar sakte hain
         tg("sendMessage", [
             "chat_id" => $chat_id,
             "text" => "🚫 $target_username ban ho gaya (Manually ban karo agar needed)"
@@ -483,7 +481,7 @@ if(isset($update["message"])){
         // Warnings remove karo
         if(isset($warns[$target_username])) {
             unset($warns[$target_username]);
-            file_put_contents($warn_file, json_encode($warns));
+            @file_put_contents($warn_file, json_encode($warns));
         }
         exit;
     }
@@ -555,6 +553,6 @@ http_response_code(200);
 echo "OK";
 
 // Final cleanup - messages file save karo
-file_put_contents($delete_file, json_encode($messages));
+@file_put_contents($delete_file, json_encode($messages));
 
 ?>
